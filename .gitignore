@@ -1,3 +1,9 @@
+# Local-Repo Specifics
+dataset/
+generator/generated
+dcgan/
+schematics
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -51,10 +57,6 @@ coverage.xml
 .pytest_cache/
 cover/
 
-# Translations
-*.mo
-*.pot
-
 # Django stuff:
 *.log
 local_settings.py
@@ -64,12 +66,6 @@ db.sqlite3-journal
 # Flask stuff:
 instance/
 .webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
 
 # PyBuilder
 .pybuilder/
@@ -116,9 +112,6 @@ __pypackages__/
 celerybeat-schedule
 celerybeat.pid
 
-# SageMath parsed files
-*.sage.py
-
 # Environments
 .env
 .venv
@@ -128,13 +121,6 @@ ENV/
 env.bak/
 venv.bak/
 
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
 # mkdocs documentation
 /site
 
@@ -143,20 +129,8 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
-# Pyre type checker
-.pyre/
-
 # pytype static type analyzer
 .pytype/
 
 # Cython debug symbols
 cython_debug/
-
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
-
-dataset/
