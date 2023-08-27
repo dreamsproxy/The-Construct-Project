@@ -1,117 +1,170 @@
-import os
 import numpy as np
+import matplotlib.pyplot as plt
+
 import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+
+from IPython.display import Image, display
+from ipywidgets import widgets, Layout, HBox
 from glob import glob
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Bidirectional
-from tqdm import tqdm
-def handle_multi_paths(filepath_list):
-    select_options = []
-    print("Multiple shape files were detected!")
-    for i, path in enumerate(filepath_list):
-        select_options.append(i)
-        print(f"[{i}]\t{path}")
-    
-    user_decision = input("Which file do you want to use?")
-    if any(option in user_decision for option in select_options):
-        confirm = str(input("Are you sure? [1/0]"))
-        if confirm == "1":
-            return filepath_list[user_decision]
-        else:
-            pass
-    else:
-        UserWarning("Input was neither 1 or 0. Falling back to use first path")
-        return None
+import os
 
-def search_shapetxt(directory_path):
-    located = False
-    shape_file = glob("./*shape*.txt")
+import cv2
 
-    if len(shape_file) == 1:
-        with open(shape_file[-1], "r") as infile:
-            original_shape = infile.read().replace(")", "").replace("(", "")
-            original_shape = tuple([int(x) for x in original_shape.split(", ")])
-        return original_shape
-    elif len(shape_file >= 2):
-        user_selection = handle_multi_paths(shape_file)
+import tqdm
 
-    elif len(shape_file) < 1:
-        print("\nNo shape files were found in the root DIR!")
-        print("[0]\tScan dataset root folder")
-        print("[1]\tUser will prrovide the full path")
-        print("[2]\tFull root and subdir scan (NOT RECOMMENDED!)")
-        print("[99]\tExit the toolkit")
-        user_decision = input("Option: ")
-        if user_decision == 0:
-            shape_file = glob(os.path.join(directory_path, "**", "*shape*.txt"))
-            with open(shape_file[0], "r") as infile:
-                original_shape = infile.read().replace(")", "").replace("(", "")
-                original_shape = tuple([int(x) for x in original_shape.split(", ")])
-                print(original_shape)
-            return original_shape
-
-        elif user_decision == 1:
-            shape_path = input("Shape path: ")
-            try:
-                with open(shape_path[0], "r") as infile:
-                    original_shape = infile.read().replace(")", "").replace("(", "")
-                    return original_shape
-            except:
-                raise Exception("Could not find the file!\nExiting!")
+def create_dataset(dataset_dir):
+    dataset_size = len(glob(os.path.join(dataset_dir, "**/")))
+    dataset = []
+    for group in tqdm.tqdm(range(dataset_size)):
+        frame_paths = glob(os.path.join(dataset_dir, str(group), "*.png"))
+        group_array = []
+        for path in frame_paths:
+            frame = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+            group_array.append(frame)
+        dataset.append(np.array(group_array))
+    dataset = np.array(dataset)
+    dataset = np.transpose(dataset, (1, 0, 2, 3))
+    return dataset
         
-        elif user_decision == 2:
-            shape_path = glob()
-# Define a function to load the dataset from the directory structure
-def load_dataset(directory_path, nested=True):
-    sequences = []
-    filepaths = glob(os.path.join(directory_path, "**", "centroids.txt"))
-    for file in tqdm(filepaths):
-        data = np.loadtxt(file, delimiter=",")
-        data = data.reshape((5, 128, 3))
-        data = normalize(data)  # Normalize each sequence
-        sequences.append(data)
-    return np.array(sequences)
+batch_size = 5
+dataset = create_dataset("./generated")
 
-def normalize(matrix):
-    norm = np.linalg.norm(matrix, axis=(1, 2), keepdims=True)
-    matrix = matrix / norm  # normalized matrix
-    return matrix
+# Swap the axes representing the number of frames and number of data samples.
+dataset = np.swapaxes(dataset, 0, 1)
+# We'll pick out 1000 of the 10000 total examples and use those.
+dataset = dataset[:1000, ...]
+# Add a channel dimension since the images are grayscale.
+dataset = np.expand_dims(dataset, axis=-1)
 
-dataset_directory = './generated/'
-data = load_dataset(dataset_directory)
-# No need to normalize the entire dataset anymore
+# Split into train and validation sets using indexing to optimize memory.
+indexes = np.arange(dataset.shape[0])
+np.random.shuffle(indexes)
+train_index = indexes[: int(0.9 * dataset.shape[0])]
+val_index = indexes[int(0.9 * dataset.shape[0]) :]
+train_dataset = dataset[train_index]
+val_dataset = dataset[val_index]
 
-# Reshape the data to match the LSTM input shape
-# (num_sequences, num_timesteps, num_features)
-X = data[:, :-1, :]  # Input sequences (all timesteps except the last)
-y = data[:, 1:, :]   # Target sequences (the next XYZ coordinates for each point)
+# We'll define a helper function to shift the frames, where
+# `x` is frames 0 to n - 1, and `y` is frames 1 to n.
+def create_shifted_frames(data):
+    x = data[:, 0 : data.shape[1] - 1, :, :]
+    y = data[:, 1 : data.shape[1], :, :]
+    return x, y
 
-# Define the LSTM model
-model = Sequential()
-model.add(Bidirectional(LSTM(64, input_shape=(X.shape[1], X.shape[2]))))
-model.add(Bidirectional(LSTM(64, return_sequences=True)))
-model.add(Dense(128 * 3))  # Output layer with 128*3 neurons for predicting XYZ for each point
+# Apply the processing function to the datasets.
+x_train, y_train = create_shifted_frames(train_dataset)
+x_val, y_val = create_shifted_frames(val_dataset)
 
-# Reshape the target data to match the model's output shape
-y = y.reshape(y.shape[0], -1)  # Reshape to (num_sequences, 128*3)
+# Create a TensorFlow dataset from the NumPy arrays
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+val_dataset = tf.data.Dataset.from_tensor_slices((x_val, y_val))
 
-# Compile the model
-model.compile(optimizer='adam', loss='mse')  # You can choose a different loss function if needed
+# Define a function to preprocess each element of the dataset
+def preprocess_data(x, y):
+    x = tf.cast(x, tf.float32) / 255.0
+    y = tf.cast(y, tf.float32) / 255.0
+    return x, y
 
-# Train the model
-model.fit(X, y, epochs=128, batch_size=16)  # Adjust epochs and batch size as needed
+# Apply the preprocessing function to the datasets using the map operation
+train_dataset = train_dataset.map(preprocess_data)
+val_dataset = val_dataset.map(preprocess_data)
 
-# Save the model
+# Shuffle and batch the datasets
+train_dataset = train_dataset.shuffle(buffer_size=len(train_dataset)).batch(batch_size)
+val_dataset = val_dataset.batch(batch_size)
+
+# Prefetching can improve performance
+train_dataset = train_dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+val_dataset = val_dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+
+# Construct the input layer with no definite frame size.
+inp = layers.Input(shape=(None, *x_train.shape[2:]))
+
+# We will construct 3 `ConvLSTM2D` layers with batch normalization,
+# followed by a `Conv3D` layer for the spatiotemporal outputs.
+x = layers.ConvLSTM2D(
+    filters=64,
+    kernel_size=(5, 5),
+    padding="same",
+    return_sequences=True,
+    activation="relu",
+)(inp)
+x = layers.BatchNormalization()(x)
+x = layers.ConvLSTM2D(
+    filters=64,
+    kernel_size=(3, 3),
+    padding="same",
+    return_sequences=True,
+    activation="relu",
+)(x)
+x = layers.BatchNormalization()(x)
+x = layers.ConvLSTM2D(
+    filters=64,
+    kernel_size=(1, 1),
+    padding="same",
+    return_sequences=True,
+    activation="relu",
+)(x)
+x = layers.Conv3D(
+    filters=1, kernel_size=(3, 3, 3), activation="sigmoid", padding="same"
+)(x)
+
+# Next, we will build the complete model and compile it.
+model = keras.models.Model(inp, x)
+model.compile(
+    loss=keras.losses.binary_crossentropy, optimizer=keras.optimizers.Adam(),
+)
+
+# Define some callbacks to improve training.
+early_stopping = keras.callbacks.EarlyStopping(monitor="val_loss", patience=10)
+reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor="val_loss", patience=5)
+
+# Define modifiable training hyperparameters.
+epochs = 20
+
+# Fit the model to the training data.
+model.fit(
+    train_dataset,
+    batch_size=batch_size,
+    epochs=epochs,
+    validation_data=val_dataset,
+    callbacks=[early_stopping, reduce_lr],
+)
 model.save("lstm.h5")
+# Select a random example from the validation dataset.
+example = val_dataset[np.random.choice(range(len(val_dataset)), size=1)[0]]
 
-# Example test sequence
-test_sequence = np.random.rand(128, 3)  # Shape: (128, 3)
+# Pick the first/last ten frames from the example.
+frames = example[:10, ...]
+original_frames = example[10:, ...]
 
-# To predict the next XYZ coordinates for each point:
-predicted_coordinates = model.predict(test_sequence.reshape(1, test_sequence.shape[0], test_sequence.shape[1]))
+# Predict a new set of 10 frames.
+for _ in range(10):
+    # Extract the model's prediction and post-process it.
+    new_prediction = model.predict(np.expand_dims(frames, axis=0))
+    new_prediction = np.squeeze(new_prediction, axis=0)
+    predicted_frame = np.expand_dims(new_prediction[-1, ...], axis=0)
 
-# Reshape the predicted_coordinates back to (128, 3) to get the predictions for each point
-predicted_coordinates = predicted_coordinates.reshape(128, 3)
+    # Extend the set of prediction frames.
+    frames = np.concatenate((frames, predicted_frame), axis=0)
 
-# The 'predicted_coordinates' variable now contains the predicted next XYZ coordinates for each point.
-print("Predicted Coordinates for Each Point:", predicted_coordinates)
+# Construct a figure for the original and new frames.
+fig, axes = plt.subplots(2, 10, figsize=(20, 4))
+
+# Plot the original frames.
+for idx, ax in enumerate(axes[0]):
+    ax.imshow(np.squeeze(original_frames[idx]), cmap="gray")
+    ax.set_title(f"Frame {idx + 11}")
+    ax.axis("off")
+
+# Plot the new frames.
+new_frames = frames[10:, ...]
+for idx, ax in enumerate(axes[1]):
+    ax.imshow(np.squeeze(new_frames[idx]), cmap="gray")
+    ax.set_title(f"Frame {idx + 11}")
+    ax.axis("off")
+
+# Display the figure.
+plt.show()
