@@ -11,13 +11,13 @@ The key features of The Construct Project include the ability to simulate a wide
 Furthermore, The Construct Project operates across scales, from genetic codes and microbial interactions to weather patterns and long-term climate trends. This holistic approach ensures that scientists can examine and experiment with a vast array of variables, gaining insights into the intricate relationships within natural systems and their potential applications in conservation and sustainable practices.
 
 ## Lesser-Technical Summary
-The Construct Project is an innovative simulator based on biomimicry principles.
-It encompasses imitating nature's form, function, processes, and systems.
-The primary goal is to create a versatile simulation platform accommodating extreme variations.
-It aids in developing ecosystem conservation plans and products.
-Scientists and researchers can model complex environmental issues and solutions.
-The simulator offers the ability to simulate diverse scenarios across different timescales.
-Parameters like dT (time interval) and n_dt (number of time steps/time-scale) are the few independent and known variables that contributes to this flexibility.
-It enables in-depth exploration of processes like carbon and nitrogen fixation and their impacts.
-The simulator operates across scales, from genetic codes to weather patterns and climate trends.
-Scientists can study intricate relationships within natural systems and apply insights to conservation and sustainability.
+* The Construct Project is an innovative simulator based on biomimicry principles.
+* It encompasses imitating nature's form, function, processes, and systems.
+* The primary goal is to create a versatile simulation platform accommodating extreme variations.
+* It aids in developing ecosystem conservation plans and products.
+* Scientists and researchers can model complex environmental issues and solutions.
+* The simulator offers the ability to simulate diverse scenarios across different timescales.
+* Parameters like dT (time interval) and n_dt (number of time steps/time-scale) are the few independent and known variables that contributes to this flexibility.
+* It enables in-depth exploration of processes like carbon and nitrogen fixation and their impacts.
+* The simulator operates across scales, from genetic codes to weather patterns and climate trends.
+* Scientists can study intricate relationships within natural systems and apply insights to conservation and sustainability.
