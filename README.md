@@ -18,6 +18,9 @@ Furthermore, The Construct Project operates across scales, from genetic codes an
 * Scientists and researchers can model complex environmental issues and solutions.
 * The simulator offers the ability to simulate diverse scenarios across different timescales.
 * Parameters like dT (time interval) and n_dt (number of time steps/time-scale) are the few independent and known variables that contributes to this flexibility.
-* It enables in-depth exploration of processes like carbon and nitrogen fixation and their impacts.
+* It enables in-depth exploration of processes like:
+    * carbon and nitrogen fixation and their impacts.
+    * Effects of introducing GMOs.
+    * Effects of re-introducing extinct animals.
 * The simulator operates across scales, from genetic codes to weather patterns and climate trends.
 * Scientists can study intricate relationships within natural systems and apply insights to conservation and sustainability.
