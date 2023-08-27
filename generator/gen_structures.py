@@ -145,23 +145,27 @@ def gen_frames(n_frames = 4, shift = 5, image_size=256, output_folder = "./gener
         if not os.path.exists(output_folder):
             os.mkdir(output_folder)
         cv2.imwrite(os.path.join(output_folder, f"{i}.png"), f)
+    centroid_array = np.array(centroid_array)
+    original_shape = centroid_array.shape
+    centroid_array = centroid_array.reshape(centroid_array.shape[0], -1)
 
-    with open(f"{output_folder}/centroids.txt", "w") as outfile:
-        for c in centroid_array:
-            outfile.writelines(str(c)+"\n")
+    np.savetxt(f"{output_folder}/centroids.txt", np.array(centroid_array), delimiter=",")
 
-    return frame_array
+
+    return frame_array, original_shape
 
 counter = 0
 spots = [200]
 spot_sizes = [11]
-n_variations = 256
+n_variations = 2048
 
 synth_ds_dir = "generated"
 
 pregrenerate_dirs(synth_ds_dir, n_variations)
-for i in range(n_variations):
-    gen_frames(n_frames=5, shift = 7, output_folder = f"./generated/{i}/")
+for i in tqdm(range(n_variations)):
+    _, og_shape = gen_frames(n_frames=5, shift = 7, output_folder = f"./generated/{i}/")
+with open("og_shape.txt", "w") as outfile:
+    outfile.write(str(og_shape))
 
 """
 with tqdm(total = len(spots) * len(spot_sizes) * n_variations) as pbar:
