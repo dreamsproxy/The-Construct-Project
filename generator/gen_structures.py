@@ -97,26 +97,28 @@ def pregrenerate_dirs(synthetic_dataset_dir: str, dataset_size: int):
     # make the directories or not
     if not os.path.exists(synthetic_dataset_dir):
         os.makedirs(synthetic_dataset_dir)
-        
+
     for i in range(dataset_size):
         variation_path = os.path.join(synthetic_dataset_dir, str(i), "/")
         if not os.path.exists(variation_path):
             os.mkdir(variation_path)
 
-def gen_frames(n_frames = 4, shift = 5, image_size=256, output_folder = "./generated"):
+def gen_frames(n_frames = 4, spot_density = 200, spot_size = 10, shift = 5, image_size=256, output_folder = "./generated", save_centroids = False):
     frame_array = []
-    centroid_array = []
+    if save_centroids:
+        centroid_array = []
 
     image, coords = create_layer(
-        spot_count=128,
-        spot_radius=10,
+        spot_count=spot_density,
+        spot_radius=spot_size,
         seed=True)
     frame_array.append(image)
     temp1 = [list(x) for x in coords]
     for i in range(len(temp1)):
         temp1[i].append(0)
     temp1 = [tuple(x) for x in temp1]
-    centroid_array.append(temp1)
+    if save_centroids:
+        centroid_array.append(temp1)
 
     n_frames -= 1
 
@@ -130,8 +132,8 @@ def gen_frames(n_frames = 4, shift = 5, image_size=256, output_folder = "./gener
             shifted_coord_cache.append((new_x, new_y))
 
         image, coords = create_layer(
-            spot_count=200,
-            spot_radius=11,
+            spot_count=spot_density,
+            spot_radius=spot_size,
             seed=False,
             shifted_coords=shifted_coord_cache)
         frame_array.append(image)
@@ -139,23 +141,24 @@ def gen_frames(n_frames = 4, shift = 5, image_size=256, output_folder = "./gener
         for i in range(len(temp2)):
             temp2[i].append(frame_id+1)
         temp2 = [tuple(x) for x in temp2]
-        centroid_array.append(temp2)
+        if save_centroids:
+            centroid_array.append(temp2)
 
     for i, f in enumerate(frame_array):
         if not os.path.exists(output_folder):
             os.mkdir(output_folder)
         cv2.imwrite(os.path.join(output_folder, f"{i}.png"), f)
-    centroid_array = np.array(centroid_array)
-    original_shape = centroid_array.shape
-    centroid_array = centroid_array.reshape(centroid_array.shape[0], -1)
 
-    np.savetxt(f"{output_folder}/centroids.txt", np.array(centroid_array), delimiter=",")
-
-
-    return frame_array, original_shape
+    if save_centroids:
+        centroid_array = np.array(centroid_array)
+        original_shape = centroid_array.shape
+        np.save(f"{output_folder}/centroids", np.array(centroid_array))
+        return frame_array, original_shape
+    else:
+        return frame_array, False
 
 counter = 0
-spots = [200]
+spot = [200]
 spot_sizes = [11]
 n_variations = 2048
 
@@ -163,17 +166,7 @@ synth_ds_dir = "generated"
 
 pregrenerate_dirs(synth_ds_dir, n_variations)
 for i in tqdm(range(n_variations)):
-    _, og_shape = gen_frames(n_frames=5, shift = 7, output_folder = f"./generated/{i}/")
-with open("og_shape.txt", "w") as outfile:
-    outfile.write(str(og_shape))
-
-"""
-with tqdm(total = len(spots) * len(spot_sizes) * n_variations) as pbar:
-    for s_count in spots:
-        for s_size in spot_sizes:
-            for i in range(n_variations):
-                img = create_layer(spot_count=s_count, spot_radius=s_size)
-                cv2.imwrite(f"generated/{counter}.png", img)
-                counter += 1
-                pbar.update(1)
-"""
+    _, og_shape = gen_frames(n_frames=2, shift = 7, output_folder = f"./generated/{i}/")
+if og_shape:
+    with open("og_shape.txt", "w") as outfile:
+        outfile.write(str(og_shape))

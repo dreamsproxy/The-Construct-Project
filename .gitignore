@@ -1,6 +1,7 @@
 # Local-Repo Specifics
 dataset/
-generator/generated/**
+generator/synthetic/
+generator/generated/
 dcgan/
 schematics
 
