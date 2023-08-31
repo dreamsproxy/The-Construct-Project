@@ -1,10 +1,11 @@
 # Local-Repo Specifics
 dataset/
+*.h5
 Generator/AI/**/synthetic/
 Generator/AI/**/dataset/
 Generator/AI/**/models/
 Generator/generated
-**dataset
+**dataset**
 schematics
 
 # Byte-compiled / optimized / DLL files
