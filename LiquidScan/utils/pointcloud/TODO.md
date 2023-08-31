@@ -1,5 +1,5 @@
-# To do list of pointcloud module
+# To-do list of point-cloud module
 
- Markup :   - [x] Separate the Op Funcs into a submodule.
-            - [ ] Integrate Helper Op Funcs to main module
-            - [ ] Add documenation
+ - [x] Separate the Op Funcs into a submodule.
+ - [ ] Integrate Helper Op Funcs to the main module
+ - [ ] Add documentation
