@@ -11,7 +11,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-w_init = tf.keras.initializers.GlorotNormal()
+W_INIT = tf.keras.initializers.GlorotNormal()
 
 def load_image(image_path):
     img = tf.io.read_file(image_path)
@@ -35,10 +35,10 @@ def deconv_block(inputs, num_filters, kernel_size, strides, bn = True):
     x = layers.Conv2DTranspose(
         filters=num_filters,
         kernel_size=kernel_size,
-        kernel_initializer=w_init,
+        kernel_initializer=W_INIT,
         padding="same",
         strides=strides,
-        use_bias=False
+        use_bias=False,
     )(inputs)
 
     if bn:
@@ -50,7 +50,7 @@ def conv_block(inputs, num_filters, kernel_size, padding="same", strides=2):
     x = layers.Conv2D(
         filters=num_filters,
         kernel_size=kernel_size,
-        kernel_initializer=w_init,
+        kernel_initializer=W_INIT,
         padding=padding,
         strides=strides,
     )(inputs)

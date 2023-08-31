@@ -66,55 +66,55 @@ def inference_prep(paths):
     return dataset
 
 # Define U-Net model for depth map prediction
-def build_UNET(input_shape=(256, 256, 1)):
+def build_UNET( w_init, input_shape=(256, 256, 1)):
     #   DOWNSAMPLE BLOCK 1
     inputs = layers.Input(shape=input_shape)
     
-    conv1 = layers.Conv2D(32, 3, padding='same')(inputs)
+    conv1 = layers.Conv2D(32, 3, padding='same', kernel_initializer=w_init)(inputs)
     conv1 = layers.BatchNormalization()(conv1)
     conv1 = layers.LeakyReLU(alpha=0.2)(conv1)
     up1 = layers.MaxPooling2D(pool_size=(2, 2))(conv1)
 
     #   DOWNSAMPLE BLOCK 2
-    conv2 = layers.Conv2D(64, 3, padding='same')(up1)
+    conv2 = layers.Conv2D(64, 3, padding='same', kernel_initializer=w_init)(up1)
     conv2 = layers.BatchNormalization()(conv2)
     conv2 = layers.LeakyReLU(alpha=0.2)(conv2)
     up2 = layers.MaxPooling2D(pool_size=(2, 2))(conv2)
 
     #   DOWNSAMPLE BLOCK 3
-    conv3 = layers.Conv2D(128, 3, padding='same')(up2)
+    conv3 = layers.Conv2D(128, 3, padding='same', kernel_initializer=w_init)(up2)
     conv3 = layers.BatchNormalization()(conv3)
     conv3 = layers.LeakyReLU(alpha=0.2)(conv3)
     up3 = layers.MaxPooling2D(pool_size=(2, 2))(conv3)
     
-    #########################################################################################
     
     #   DOWNSAMPLE BLOCK 4
-    conv4 = layers.Conv2D(256, 3, padding='same')(up3)
+    conv4 = layers.Conv2D(256, 3, padding='same', kernel_initializer=w_init)(up3)
     conv4 = layers.BatchNormalization()(conv4)
     conv4 = layers.LeakyReLU(alpha=0.2)(conv4)
     up4 = layers.MaxPooling2D(pool_size=(2, 2))(conv4)
 
+    #########################################################################################
     #   UPSAMPLING BLOCK 1
-    deconv1 = layers.Conv2DTranspose(256, 3, strides=(2, 2), padding='same')(up4)
+    deconv1 = layers.Conv2DTranspose(256, 3, strides=(2, 2), padding='same', kernel_initializer=w_init)(up4)
     deconv1 = layers.BatchNormalization()(deconv1)
     deconv1 = layers.LeakyReLU(alpha=0.2)(deconv1)
     deconv1 = layers.concatenate([deconv1, conv4])
 
     #   UPSAMPLING BLOCK 2
-    deconv2 = layers.Conv2DTranspose(128, 3, strides=(2, 2), padding='same')(deconv1)
+    deconv2 = layers.Conv2DTranspose(128, 3, strides=(2, 2), padding='same', kernel_initializer=w_init)(deconv1)
     deconv2 = layers.BatchNormalization()(deconv2)
     deconv2 = layers.LeakyReLU(alpha=0.2)(deconv2)
     deconv2 = layers.concatenate([deconv2, conv3])
 
     #   UPSAMPLING BLOCK 3
-    deconv3 = layers.Conv2DTranspose(64, 3, strides=(2, 2), padding='same')(deconv2)
+    deconv3 = layers.Conv2DTranspose(64, 3, strides=(2, 2), padding='same', kernel_initializer=w_init)(deconv2)
     deconv3 = layers.LeakyReLU(alpha=0.2)(deconv3)
     deconv3 = layers.BatchNormalization()(deconv3)
     deconv3 = layers.concatenate([deconv3, conv2])
 
     #   UPSAMPLING BLOCK 4
-    deconv4 = layers.Conv2DTranspose(32, 3, strides=(2, 2), padding='same')(deconv3)
+    deconv4 = layers.Conv2DTranspose(32, 3, strides=(2, 2), padding='same', kernel_initializer=w_init)(deconv3)
     deconv4 = layers.BatchNormalization()(deconv4)
     deconv4 = layers.LeakyReLU(alpha=0.2)(deconv4)
     deconv4 = layers.concatenate([deconv4, conv1])
@@ -141,34 +141,31 @@ def total_loss(y_true, y_pred):
     mse_loss_val = mse_loss(y_true, y_pred)
     ssim_loss_val = ssim_loss(y_true, y_pred)
     kl_loss = kl_divergence(y_true, y_pred)
-    return kl_loss + ssim_loss_val + mse_loss_val
+    return kl_loss + mse_loss_val + ssim_loss_val
+
+def threshold_array(arr):
+    mask = arr >= 0.5
+    arr[mask] = 1.0
+    arr[~mask] = 0.0
+    
+    return arr
 
 def plot_preds(model, input_image, epoch):
     preidction = model.predict(input_image)
     preidction = preidction[0, :, :, 0]
-    plt.imshow(preidction, cmap="gray")
-    plt.title(f"Epoch {epoch}")
-    plt.show()
+    preidction = threshold_array(preidction)
+    preidction *= 255.0
+    cv2.imwrite(f"{epoch}", preidction)
 
 #   Hyperparams
-epochs = 50
+epochs = 20
 batch_size = 16
-lr = 0.0002
+lr = 0.0004
 b1 = 0.5
 w_decay = 0.001
-
 IMG_H, IMG_W, IMG_C = (256, 256, 1)
-# Compile the model
-adam_opt = optimizers.Adam(
-    learning_rate = lr,
-    amsgrad = True,
-    beta_1 = b1,
-    decay = w_decay
-)
 
-train_ds, val_ds = create_dataset('./dataset/x', './dataset/y', batch_size = batch_size)
-model = build_UNET()
-model.compile(optimizer=adam_opt, loss=total_loss, metrics=[mse_loss, ssim_loss, kl_divergence])
+w_init = tf.keras.initializers.GlorotUniform()
 
 csv_logger = tf.keras.callbacks.CSVLogger(
         f"./models/training.log",
@@ -176,14 +173,26 @@ csv_logger = tf.keras.callbacks.CSVLogger(
 )
 plateu = tf.keras.callbacks.ReduceLROnPlateau(
     monitor="val_mse_loss",
-    factor=0.5,
+    factor=0.1,
     patience=5,
     verbose=1,
     mode="min",
     min_delta=0.0001,
     cooldown=1,
-    min_lr=0.0000001,
+    min_lr=0.00000001,
 )
+
+train_ds, val_ds = create_dataset('./dataset/x', './dataset/y', batch_size = batch_size)
+model = build_UNET(w_init)
+
+# Compile the model
+adam_opt = optimizers.Adam(
+    learning_rate = lr,
+    amsgrad = True,
+    beta_1 = b1,
+    decay = w_decay
+)
+model.compile(optimizer=adam_opt, loss=total_loss, metrics=[mse_loss, ssim_loss, kl_divergence])
 
 model.fit(
     train_ds,
@@ -191,10 +200,9 @@ model.fit(
     callbacks = [csv_logger, plateu],
     validation_data = val_ds
 )
-
-model.save("./models/VAE-UNET.h5")
+model.save(f"./models/VAE-UNET.h5")
 model.save_weights("./models/VAE-UNET_WEIGHTS.h5")
-image_path = '1.png'
+
+image_path = './dataset/x/2047.png'
 infer_data = inference_prep(image_path)
-model.load_weights("./models/VAE-UNET_WEIGHTS.h5")
-plot_preds(model, infer_data, epoch="final")
+plot_preds(model, infer_data, epoch=f"ELR-{str(lr)}.png")
