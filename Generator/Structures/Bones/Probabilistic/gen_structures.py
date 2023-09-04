@@ -151,22 +151,17 @@ def gen_frames(n_frames = 4, spot_density = 200, spot_size = 10, shift = 5, imag
 
     if save_centroids:
         centroid_array = np.array(centroid_array)
-        original_shape = centroid_array.shape
         np.save(f"{output_folder}/centroids", np.array(centroid_array))
-        return frame_array, original_shape
-    else:
-        return frame_array, False
+
+    return frame_array
 
 counter = 0
 spot = [200]
 spot_sizes = [11]
-n_variations = 2048
+n_variations = 8
 
 synth_ds_dir = "generated"
 
 pregrenerate_dirs(synth_ds_dir, n_variations)
 for i in tqdm(range(n_variations)):
-    _, og_shape = gen_frames(n_frames=2, shift = 7, output_folder = f"./generated/{i}/")
-if og_shape:
-    with open("og_shape.txt", "w") as outfile:
-        outfile.write(str(og_shape))
+    _, og_shape = gen_frames(n_frames=8, shift = 7, output_folder = f"./dataset/{i}/", save_centroids=True)

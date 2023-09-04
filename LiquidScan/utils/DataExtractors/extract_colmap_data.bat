@@ -1,0 +1,1 @@
+COLMAP-3.8-windows-cuda\COLMAP.bat model_converter --input_path ./valve_handle/colmap/sparse/0/ --output_path extracted_data/ --output_type CAM & COLMAP-3.8-windows-cuda\COLMAP.bat model_converter --input_path ./valve_handle/colmap/sparse/0/ --output_path extracted_data/ --output_type TXT

@@ -1,9 +1,9 @@
 # Local-Repo Specifics
-dataset/
+**dataset/
 *.h5
-Generator/AI/**/synthetic/
-Generator/AI/**/dataset/
-Generator/AI/**/models/
+**synthetic/
+#Generator/**/**/dataset/
+Generator/**/**/models/
 Generator/generated
 **dataset**
 schematics
