@@ -14,7 +14,6 @@ class Generator:
         self.roots = []
         self.branches = []
         self.full_tree = []
-        #return self
     
     def generate_circle_coordinates(radius, z, num_points=10):
         angles = np.linspace(0, 2 * np.pi, num_points, endpoint=False)
@@ -29,12 +28,13 @@ class Generator:
         normalized_coordinates = coordinates / max_radius
         return normalized_coordinates
     
-    def randomly_shift_coordinates(coordinates, max_shift):
+    def randomly_shift_coordinates(coordinates, max_shift, exclude_z = True):
         num_dimensions = coordinates.shape[1]
         random_shifts = np.random.uniform(-max_shift, max_shift, size=(coordinates.shape[0], num_dimensions))
         
         # Apply the random shift only to x and y (first two columns)
-        random_shifts[:, 2] = 0  # Keep z coordinates unchanged
+        if exclude_z:
+            random_shifts[:, 2] = 0  # Keep z coordinates unchanged
         shifted_coordinates = coordinates + random_shifts
         return shifted_coordinates
     
@@ -53,7 +53,7 @@ class Generator:
             circle = Generator.generate_circle_coordinates(radius_array[iter], z, nodes_array[iter-1])
             #inner = Generator.generate_circle_coordinates(radius_array[iter-1], z, nodes_array[iter-1])
             #circle = np.row_stack((outer, inner))
-            circle = Generator.randomly_shift_coordinates(circle, max_shift = 0.5)
+            circle = Generator.randomly_shift_coordinates(circle, max_shift = 0.5, exclude_z=False)
             circle = Generator.normalize_coordinates(circle)
             self.roots.append(circle)
         
@@ -71,6 +71,7 @@ for slice in gen.roots:
     y = slice[:, 1]
     z = slice[:, 2]
     # Creating plot
-    ax.scatter3D(x, y, z, color = "green")
-plt.title("simple 3D scatter plot")
+    ax.scatter3D(x, y, z, cmap = "magma", c = slice[:, 2])
+    ax.set_facecolor("black")
+plt.title("Root nodes")
 plt.show()
