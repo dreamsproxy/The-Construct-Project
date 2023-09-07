@@ -37,7 +37,7 @@ def create_flipped_images(input_folder, output_folder):
             cv2.imwrite(os.path.join(output_folder, f"vhflip_{file}.png"), img_VH)
 
 if __name__ == "__main__":
-    input_folder = "source/balanced"  # Replace with the path to your input folder
-    output_folder = "source/augmented"  # Replace with the path to your output folder
+    input_folder = "dataset/jpg"  # Replace with the path to your input folder
+    output_folder = "dataset/augmented"  # Replace with the path to your output folder
 
     create_flipped_images(input_folder, output_folder)

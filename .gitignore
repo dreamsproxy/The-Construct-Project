@@ -2,6 +2,7 @@
 **dataset/
 *.h5
 **synthetic/
+**samples/
 #Generator/**/**/dataset/
 Generator/**/**/models/
 Generator/generated
