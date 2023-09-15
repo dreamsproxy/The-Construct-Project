@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Conv2D, Conv2DTranspose, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization, LeakyReLU
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam, Adagrad
 from glob import glob
 from tqdm import tqdm
 from matplotlib import pyplot as plt
@@ -10,9 +10,9 @@ from mpl_toolkits.mplot3d import Axes3D
 import plotly.graph_objects as go
 import os
 
-G_H = 512
-G_W = 512
-num_points = G_H
+IMG_H = 512
+IMG_W = 512
+num_points = IMG_H
 
 def plot_from_dir(dir):
     x_grid = np.linspace(-10, 10, num_points)
@@ -64,8 +64,6 @@ def plot_from_dir(dir):
             colorscale='Viridis',  # Adjust the colorscale as needed
             showscale=False  # Hide the color scale legend
         ))
-
-
     # Set the layout
     fig.update_layout(
         scene=dict(
@@ -84,13 +82,12 @@ def plot_from_dir(dir):
     plt.show()
     return cam_data
 
-
 # Function to load and preprocess the images
 def load_images(image_paths):
     images = []
     for path in tqdm(image_paths):
         img = cv2.imread(path)
-        img = cv2.resize(img, (G_H, G_W))  # Reshape the images to a consistent size
+        img = cv2.resize(img, (IMG_H, IMG_W))  # Reshape the images to a consistent size
         images.append(img)
     return np.array(images)
 
@@ -116,26 +113,26 @@ def train():
 
     # Define the model
     model = Sequential()
-    model.add(Conv2D(32, (3, 3), input_shape=(G_H, G_W, 3)))
-    model.add(LeakyReLU(alpha=0.2))
+    model.add(Conv2D(32, (3, 3), input_shape=(IMG_H, IMG_W, 3)))
+    model.add(LeakyReLU())
     model.add(BatchNormalization())
     model.add(MaxPooling2D((2, 2)))
     # 256
     
     model.add(Conv2D(64, (3, 3)))
-    model.add(LeakyReLU(alpha=0.2))
+    model.add(LeakyReLU())
     model.add(BatchNormalization())
     model.add(MaxPooling2D((2, 2)))
     # 128
 
     model.add(Conv2D(128, (3, 3)))
-    model.add(LeakyReLU(alpha=0.2))
+    model.add(LeakyReLU())
     model.add(BatchNormalization())
     model.add(MaxPooling2D((2, 2)))
     # 64
 
     model.add(Conv2D(256, (3, 3)))
-    model.add(LeakyReLU(alpha=0.2))
+    model.add(LeakyReLU())
     model.add(BatchNormalization())
     model.add(MaxPooling2D((2, 2)))
     # 32
@@ -143,7 +140,7 @@ def train():
     model.add(Flatten())
     
     model.add(Dense(1024))
-    model.add(LeakyReLU(alpha=0.2))
+    model.add(LeakyReLU())
     model.add(BatchNormalization())
     model.add(Dropout(0.3))
 
@@ -153,11 +150,12 @@ def train():
     adam_opt = Adam(
         learning_rate=0.0002,
         amsgrad=True,
+        decay = 0.0001,
         name="Adam_amsgrad",
     )
 
     model.compile(optimizer=adam_opt, loss='mse')
-    model.fit(X_train, y_train, epochs=10, batch_size=1)
+    model.fit(X_train, y_train, epochs=10, batch_size=12)
 
     model.save("GrC.h5")
 
@@ -172,7 +170,7 @@ def train():
     #predicted_cam = " ".join(predicted_cam)
     # Save the predicted .cam data to a file
     with open('predicted.cam', 'w') as file:
-        file.write(str(predicted_cam))  # Assuming the .cam data is a single value
+        file.write(str(predicted_cam))  # Assuming the .cam data is a single element
 
 def inference(model_path, predict_image):
     model = load_model(model_path)
@@ -180,7 +178,7 @@ def inference(model_path, predict_image):
     predicted_cam = model.predict(image)
     predicted_cam = "".join([str(x) for x in predicted_cam]).replace("[", "").replace("]", "")
     with open('predicted.cam', 'w') as file:
-        file.write(str(predicted_cam))  # Assuming the .cam data is a single value
+        file.write(str(predicted_cam))  # Assuming the .cam data is a single element
 
 cam_data = plot_from_dir("dataset\exterior_mode\courtyard\cams\**") 
 
