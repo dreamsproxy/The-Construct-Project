@@ -8,7 +8,6 @@ from tqdm import tqdm
 import multiprocessing
 import os
 
-
 def find_closest_neighbors(point_cloud, radius):
     print("Searching neighbors")
     kdtree = cKDTree(point_cloud)
@@ -64,28 +63,6 @@ def filter_array(density_array, threshold = 10):
     filtered_point_cloud, filtered_num_neighbors, filtered_normalized_neighbors = zip(*filtered_points_data)
     return filtered_point_cloud, filtered_num_neighbors, filtered_normalized_neighbors
 
-def visualize_density(filtered_point_cloud, filtered_normalized_neighbors):
-    fig = go.Figure(data=go.Scatter3d(
-        x=[point[0] for point in filtered_point_cloud],
-        y=[point[1] for point in filtered_point_cloud],
-        z=[point[2] for point in filtered_point_cloud],
-        mode='markers',
-        surfacecolor = "black",
-        marker=dict(
-            size=2,
-            color=filtered_normalized_neighbors,  # Color points based on normalized neighbors
-            colorscale='Viridis',                 # Choose the colorscale (you can change this)
-            opacity=1.0,
-            colorbar=dict(title='Normalized Num Neighbors')
-        )
-    ))
-    fig.update_layout(scene=dict(
-        xaxis_title='X',
-        yaxis_title='Y',
-        zaxis_title='Z',
-    ), title='Filtered Point Cloud with Color-Coded Normalized using number of neighbors in the radius of 0.15')
-
-    fig.show()
 
 if __name__ == "__main__":
     file = "../dataset/Full Scans/MarketplaceFeldkirch_Station4_rgb_intensity-reduced.txt"
