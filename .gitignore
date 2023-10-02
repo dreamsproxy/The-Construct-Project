@@ -1,13 +1,15 @@
 # Local-Repo Specifics
 **dataset/
+**dataset**
+
 *.h5
 **synthetic/
 **samples/
-#Generator/**/**/dataset/
-Generator/**/**/models/
-Generator/generated
-**dataset**
-schematics
+
+Generator/Structures
+
+OrganicStructuresDCGAN/models/**/**
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
