@@ -65,4 +65,7 @@ LSM.create()
 print(LSM.weight_table)
 x = np.array([-1.0, 0.0, 1.0, 2.0])
 output = LSM.step(x)
-print(output)
+for n_w in output:
+    print(n_w)
+    print()
+#print(output)
