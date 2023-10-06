@@ -201,16 +201,16 @@ if __name__ == "__main__":
     IMG_W = img_size
     IMG_C = 1
 
-    latent_dim = 256
+    latent_dim = 128
 
     # Drop batch size to 10 after 1K epochs
     batch_size = 10
-    num_epochs = 1000
+    num_epochs = 500
 
     # Do 0.0003 on first 1K epochs
     # Then move to 0.0002 for both for each 1K epochs
-    g_model_learning_rate = 0.0002
-    d_model_learning_rate = 0.0002
+    g_model_learning_rate = 0.0005
+    d_model_learning_rate = 0.0005
     model_beta_1 = 0.5
     model_amsgrad = True
 
