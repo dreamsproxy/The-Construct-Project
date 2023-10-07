@@ -1,10 +1,11 @@
 import numpy as np
 import plotly.graph_objs as go
-from PIL import Image
+import cv2
+from utils import ImageIOs
 
 # Load the grayscale image
 image_path = "./Segmentation/7C-11-41-21.png"
-image = Image.open(image_path).convert('L')  # Convert to grayscale if not already
+image = ImageIOs.load_image(image_path)
 
 # Convert the image to a NumPy array
 image_array = np.array(image)
