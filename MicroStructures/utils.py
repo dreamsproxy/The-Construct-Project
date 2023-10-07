@@ -1,7 +1,7 @@
 import cv2
 
 class ImageIOs:
-    def __init__(self, verbose) -> None:
+    def __init__(self, verbose = False) -> None:
         self.verbose = verbose
         pass
     def load_image(self, img_path: str, size = None):

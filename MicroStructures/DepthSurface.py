@@ -3,9 +3,12 @@ import plotly.graph_objs as go
 import cv2
 from utils import ImageIOs
 
+image_utils = ImageIOs(verbose=False)
+
 # Load the grayscale image
 image_path = "./Segmentation/7C-11-41-21.png"
-image = ImageIOs.load_image(image_path)
+
+image = image_utils.load_image(image_path)
 
 # Convert the image to a NumPy array
 image_array = np.array(image)
