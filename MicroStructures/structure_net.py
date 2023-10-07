@@ -1,6 +1,6 @@
 """
 Suppose you are given an image of a sponge or porous rock
-You'd like to generate the artificial structure om 3D based on the
+You'd like to generate the artificial structure in 3D based on the
 solid and void structure. How?
 
 Idenity all joint positions
@@ -53,10 +53,7 @@ def plot_structures(path):
     fig.show()
 
 paths = [
-    "dataset/Biomorphic/grayscale-256/A60.jpg",
-    #"dataset/Biomorphic/grayscale-256/11.jpg",
-    #"dataset/Biomorphic/grayscale-256/13.jpg",
-    "dataset/Biomorphic/grayscale-256/35.jpg"
+    "./Segmentation/7C-11-41-21.png"
 ]
 
 for i in paths:

@@ -12,7 +12,6 @@ def load_image(img_path: str, size = None):
     #img_size = img.shape()
     return img
 
-
 class Fourier:
     def __init__(self) -> None:
         pass
