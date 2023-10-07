@@ -4,14 +4,6 @@ import numpy as np
 import os
 from glob import glob
 
-def load_image(img_path: str, size = None):
-    if size == None:
-        size = (256, 256)
-    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
-    img = cv2.resize(img, size)
-    #img_size = img.shape()
-    return img
-
 class Fourier:
     def __init__(self) -> None:
         pass
