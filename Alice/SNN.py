@@ -55,14 +55,15 @@ class Network:
     def __init__(self, T = 100, n_neurons = 10, w_init = None) -> None:
         self.n_neurons = n_neurons
         self.T = T
-        self.LIFNeurons = []
+        self.T_log = 0
+        self.LIFNeurons = dict()
         self.weightsclass = WeightMatrix(10, w_init)
         self.weightmatrix = self.weightsclass.matrix
         pass
 
     def InitNetwork(self):
         for i in range(self.n_neurons):
-            self.LIFNeurons.append(LIF(i))
+            self.LIFNeurons[i] = LIF(i)
     
     def GetNeuronWeights(self, DEBUG):
         if DEBUG:
@@ -78,32 +79,50 @@ class Network:
         """
         neighbor_weights = self.weightmatrix[neuron_id, :]
         neighbor_ids = [i for i in range(len(neighbor_weights))]
-        
+
         # Delete itself from neighbor data
         del neighbor_ids[neuron_id]
         np.delete(neighbor_weights, neuron_id)
-        
-        print(neighbor_ids)
-        print(neighbor_weights)
-        for n_neu in self.LIFNeurons:
-            for n_id in neighbor_ids:
-                if n_neu.neuron_id == n_id:
-                    out_sig = np.float16(10.0) * neighbor_weights[n_id]
-                    new_weight
 
-        for n_id in neighbor_ids:
-            if n_id == 
         return neighbor_ids, neighbor_weights
 
+    """
+    Brainstorming function of how the signal wave is spread.
+    
+    def WaveProp(self, ids, weights):
+        for n_neu in self.LIFNeurons:
+            for n_id in ids:
+                if n_neu.neuron_id == n_id:
+                    out_sig = np.float16(10.0) * weights[n_id]
+                    # Calculate 
+                    #new_weight =
+    """
+
+    def NetworkUpdate(self, except_id):
+        for i in list(self.LIFNeurons.keys())
+        
     def step(self, input_current = np.float16(0.000), input_neuron = 0):
+        self.input_bool = True
+        self.wave_dict = dict()
+        self.spike_dict = dict()
         # Always do input neuron first.
-        for neu in self.LIFNeurons:
-            if input_current > np.float16(0.000):
-                if neu.neuron_id == input_neuron:
-                    neu.update(input_current)
-                    if neu.spike_bool:
-                        self.Propagate(neu.neuron_id)
-                        print("SCIENCE BIATCH!")
+        if input_current > np.float16(0.000) and self.input_bool:
+            # Search for input neuron,
+            # USING DICT NOT LIST TO SPEED UP SEARCH AND REDUCE LINES
+            neu = self.LIFNeurons[input_neuron]
+            neu.update(input_current)
+            if neu.spike_bool:
+                self.spike_dict[input_neuron] = True
+                neighbor_ids, neighbor_ws = self.PrepPropagation(neu.neuron_id)
+                for iter in range(len(neighbor_ids)):
+                    self.wave_dict[neighbor_ids[iter]] = neighbor_ws
+            # Step end
+        else:
+            ids = list(self.wave_dict.keys())
+            for i in ids:
+                out_sig = np.float16(10.0) * self.wave_dict[i]
+                lif 
+        self.T_log += 1
 
 if __name__ == "__main__":
     snn = Network(w_init="mid")
